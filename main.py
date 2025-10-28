@@ -1,81 +1,48 @@
-import sys, types
-sys.modules['audioop'] = types.ModuleType('audioop')
-
+import os
 import nextcord
 from nextcord.ext import commands
-from nextcord import Embed
-import os
 from flask import Flask
 from threading import Thread
 
-# === BOT CONFIG ===
+# --- Discord Bot Setup ---
 intents = nextcord.Intents.default()
-intents.message_content = True
-intents.members = True  # Needed for join/leave events
-
+intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# === EVENT: Bot Ready ===
 @bot.event
 async def on_ready():
     print(f"✅ Bot is online as {bot.user}")
 
-# === EVENT: Welcome Message ===
 @bot.event
 async def on_member_join(member):
-    # 👇 Replace this with your actual welcome channel ID
-    WELCOME_CHANNEL_ID = 1432474691381104707  
+    channel_id = 1432474691381104707  # replace with your welcome channel ID
+    channel = bot.get_channel(channel_id)
 
-    channel = bot.get_channel(WELCOME_CHANNEL_ID)
     if channel:
-        embed = Embed(
+        embed = nextcord.Embed(
             title="🎉 Welcome to Nuvix Market!",
-            description=f"Hey {member.mention}, we're glad to have you here! 💫\n\nExplore the channels and enjoy your stay!",
+            description=(
+                f"Hey {member.mention}! 👋\n\n"
+                "Welcome to **Nuvix Market** — the best place for your deals and wishes!\n"
+                "Make sure to check out <#1432474691381104708> for rules and <#1432474691381104709> to verify your account."
+            ),
             color=0x5865F2
         )
-        embed.set_thumbnail(url=member.display_avatar.url)
+        embed.set_thumbnail(url=member.avatar.url if member.avatar else None)
         embed.set_footer(text="Nuvix Market — Your wishes, more cheap!")
         await channel.send(embed=embed)
-        print(f"🟢 Welcomed {member.name}")
-    else:
-        print("⚠️ Couldn't find the welcome channel.")
 
-# === EVENT: Goodbye Message ===
-@bot.event
-async def on_member_remove(member):
-    # 👇 Optional: Replace this with your goodbye channel ID
-    GOODBYE_CHANNEL_ID = 123456789012345678  
-
-    channel = bot.get_channel(GOODBYE_CHANNEL_ID)
-    if channel:
-        embed = Embed(
-            title="👋 Goodbye!",
-            description=f"{member.name} has left the server. We hope to see you again soon!",
-            color=0xFF5555
+    try:
+        await member.send(
+            f"👋 Hi {member.name}! Welcome to **Nuvix Market**.\n"
+            "Enjoy your stay and check our rules and store sections!"
         )
-        embed.set_footer(text="Nuvix Market — We'll miss you 💔")
-        await channel.send(embed=embed)
-        print(f"🔴 {member.name} left the server.")
+    except:
+        pass
 
-# === COMMANDS ===
-@bot.command()
-async def ping(ctx):
-    await ctx.send("🏓 Pong! The bot is active and running.")
 
-@bot.command()
-async def info(ctx):
-    embed = Embed(
-        title="📘 Server Info",
-        description="Welcome to **Nuvix Market** — The best place for your digital wishes!",
-        color=0x00FFB0
-    )
-    embed.add_field(name="👑 Owner", value="YourNameHere", inline=True)
-    embed.add_field(name="🌐 Website", value="[Visit Here](https://nviXXX.onrender.com/)", inline=True)
-    embed.set_footer(text="Nuvix Market — Powered by Nextcord")
-    await ctx.send(embed=embed)
-
-# === FLASK KEEP-ALIVE SERVER (for Render) ===
-app = Flask('')
+# --- Flask Keepalive Server ---
+app = Flask(__name__)
 
 @app.route('/')
 def home():
@@ -88,8 +55,9 @@ def keep_alive():
     t = Thread(target=run)
     t.start()
 
-# === RUN BOT ===
+
+# --- Run both Flask and Discord bot ---
 if __name__ == "__main__":
     keep_alive()
-    TOKEN = os.getenv("DISCORD_TOKEN")  # Store your token securely in Render
+    TOKEN = os.getenv("DISCORD_TOKEN")
     bot.run(TOKEN)
