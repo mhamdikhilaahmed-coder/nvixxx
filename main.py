@@ -1,63 +1,77 @@
 import os
+import threading
 import nextcord
 from nextcord.ext import commands
 from flask import Flask
-from threading import Thread
 
-# --- Discord Bot Setup ---
+# ----------------------------------------------------------
+# 1️⃣  Evitar errores de audio en Python 3.13
+# ----------------------------------------------------------
+# El módulo 'audioop' fue eliminado en Python 3.13, y nextcord intenta importarlo.
+# Esto evita que el bot falle al cargar módulos de voz.
+nextcord.opus = None
+nextcord.player = None
+
+# ----------------------------------------------------------
+# 2️⃣  Configuración del bot
+# ----------------------------------------------------------
 intents = nextcord.Intents.default()
+intents.message_content = True
 intents.members = True
+
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+# ----------------------------------------------------------
+# 3️⃣  Evento: cuando el bot se conecta
+# ----------------------------------------------------------
 @bot.event
 async def on_ready():
-    print(f"✅ Bot is online as {bot.user}")
+    print(f"✅ Logged in as {bot.user} (ID: {bot.user.id})")
+    print("------ Bot is ready and running! ------")
 
+# ----------------------------------------------------------
+# 4️⃣  Evento: bienvenida de miembros
+# ----------------------------------------------------------
 @bot.event
 async def on_member_join(member):
-    channel_id = 1432474691381104707  # replace with your welcome channel ID
-    channel = bot.get_channel(channel_id)
-
+    channel_id = int(os.getenv("WELCOME_CHANNEL_ID", 0))
+    if not channel_id:
+        print("⚠️  No WELCOME_CHANNEL_ID found in environment variables.")
+        return
+    channel = member.guild.get_channel(channel_id)
     if channel:
-        embed = nextcord.Embed(
-            title="🎉 Welcome to Nuvix Market!",
-            description=(
-                f"Hey {member.mention}! 👋\n\n"
-                "Welcome to **Nuvix Market** — the best place for your deals and wishes!\n"
-                "Make sure to check out <#1432474691381104708> for rules and <#1432474691381104709> to verify your account."
-            ),
-            color=0x5865F2
+        await channel.send(
+            f"👋 Welcome to the server, {member.mention}! We're happy to have you here!"
         )
-        embed.set_thumbnail(url=member.avatar.url if member.avatar else None)
-        embed.set_footer(text="Nuvix Market — Your wishes, more cheap!")
-        await channel.send(embed=embed)
+    else:
+        print("⚠️  Welcome channel not found.")
 
-    try:
-        await member.send(
-            f"👋 Hi {member.name}! Welcome to **Nuvix Market**.\n"
-            "Enjoy your stay and check our rules and store sections!"
-        )
-    except:
-        pass
+# ----------------------------------------------------------
+# 5️⃣  Comando básico de ping
+# ----------------------------------------------------------
+@bot.command()
+async def ping(ctx):
+    await ctx.send("🏓 Pong! The bot is working correctly.")
 
-
-# --- Flask Keepalive Server ---
+# ----------------------------------------------------------
+# 6️⃣  Servidor Flask para mantenerlo vivo (Render pings)
+# ----------------------------------------------------------
 app = Flask(__name__)
 
-@app.route('/')
+@app.route("/")
 def home():
     return "✅ Nuvix Market Bot is alive and running!"
 
-def run():
-    app.run(host='0.0.0.0', port=8080)
+def run_flask():
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
 
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
-
-
-# --- Run both Flask and Discord bot ---
+# ----------------------------------------------------------
+# 7️⃣  Lanzar Flask en hilo separado y luego el bot
+# ----------------------------------------------------------
 if __name__ == "__main__":
-    keep_alive()
-    TOKEN = os.getenv("DISCORD_TOKEN")
-    bot.run(TOKEN)
+    threading.Thread(target=run_flask).start()
+    token = os.getenv("DISCORD_TOKEN")
+    if not token:
+        print("❌ Missing DISCORD_TOKEN environment variable.")
+    else:
+        bot.run(token)
