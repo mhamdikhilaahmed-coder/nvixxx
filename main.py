@@ -42,3 +42,19 @@ async def ping(ctx):
     await ctx.send("🏓 Pong! Nuvix Market bot is alive.")
 
 bot.run(os.getenv("TOKEN"))
+
+# --- Mantener el bot activo en Render ---
+from flask import Flask
+from threading import Thread
+
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "✅ NVIXXX bot is alive"
+
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+Thread(target=run).start()
+# --- Fin del keep alive ---
