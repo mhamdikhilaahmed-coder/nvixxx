@@ -1,3 +1,6 @@
+import sys, types
+sys.modules['audioop'] = types.ModuleType('audioop')
+
 import nextcord
 from nextcord.ext import commands
 from nextcord import Embed
