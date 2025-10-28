@@ -36,15 +36,50 @@ async def on_ready():
 async def on_member_join(member):
     channel_id = int(os.getenv("WELCOME_CHANNEL_ID", 0))
     if not channel_id:
-        print("⚠️  No WELCOME_CHANNEL_ID found in environment variables.")
+        print("⚠️ No WELCOME_CHANNEL_ID found in environment variables.")
         return
+
     channel = member.guild.get_channel(channel_id)
-    if channel:
-        await channel.send(
-            f"👋 Welcome to the server, {member.mention}! We're happy to have you here!"
-        )
-    else:
-        print("⚠️  Welcome channel not found.")
+    if not channel:
+        print("⚠️ Welcome channel not found.")
+        return
+
+    # 📅 Fecha de ingreso formateada
+    joined_date = member.joined_at.strftime("%B %d, %Y %H:%M")
+
+    # 💠 Embed con estilo Nebula
+    embed = nextcord.Embed(
+        title="🎉 A new user has joined!",
+        description=(
+            f"Hey {member.mention}, welcome to **Nuvix Market 🎃**!\n\n"
+            "Explore the server, meet awesome people, and don’t forget to check our rules before starting.\n"
+            "We’re happy to have you here 💜"
+        ),
+        color=nextcord.Color.purple()
+    )
+
+    # 💬 Autor del embed
+    embed.set_author(
+        name=f"Welcome System - Nuvix Market 🎃",
+        icon_url="https://cdn.discordapp.com/emojis/1201021237746053161.webp?size=96&quality=lossless"
+    )
+
+    # 📸 Miniatura del usuario
+    embed.set_thumbnail(url=member.display_avatar.url)
+
+    # 🕒 Campos de información
+    embed.add_field(name="👤 User", value=f"{member.mention}", inline=True)
+    embed.add_field(name="🕓 Joined On", value=f"{joined_date}", inline=True)
+
+    # 🖼️ Banner de bienvenida
+    embed.set_image(url="https://i.imgur.com/fcFxMVA.png")  # Cambia este enlace por tu banner personalizado
+
+    # ✨ Footer
+    embed.set_footer(text="Welcome System - Nuvix Market 🎃")
+
+    # Envía el embed
+    await channel.send(embed=embed)
+    print(f"✅ Sent welcome embed for {member.name}")
 
 # ----------------------------------------------------------
 # 5️⃣  Comando básico de ping
@@ -75,3 +110,4 @@ if __name__ == "__main__":
         print("❌ Missing DISCORD_TOKEN environment variable.")
     else:
         bot.run(token)
+
