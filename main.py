@@ -1,3 +1,9 @@
+# --- FIX para Python 3.13 ---
+# Crea un módulo falso para "audioop" para evitar el error.
+import sys, types
+sys.modules['audioop'] = types.ModuleType('audioop')
+# ----------------------------
+
 import nextcord
 from nextcord.ext import commands
 from datetime import datetime
@@ -15,7 +21,7 @@ async def on_ready():
 
 @bot.event
 async def on_member_join(member):
-    channel_id = 1432474691381104707  # 👈 pon aquí el ID de tu canal de bienvenida
+    channel_id = 1432474691381104707  # 👈 tu ID real del canal
     channel = bot.get_channel(channel_id)
     if channel:
         join_date = datetime.now().strftime("%B %d, %Y • %H:%M")
