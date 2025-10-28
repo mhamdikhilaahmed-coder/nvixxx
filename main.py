@@ -72,7 +72,7 @@ async def on_member_join(member):
     embed.add_field(name="🕓 Joined On", value=f"{joined_date}", inline=True)
 
     # 🖼️ Banner de bienvenida
-    embed.set_image(url="https://i.imgur.com/fcFxMVA.png")  # Cambia este enlace por tu banner personalizado
+    embed.set_image(url="https://i.imgur.com/99PXEfI.png")  # Cambia este enlace por tu banner personalizado
 
     # ✨ Footer
     embed.set_footer(text="Welcome System - Nuvix Market 🎃")
@@ -110,4 +110,5 @@ if __name__ == "__main__":
         print("❌ Missing DISCORD_TOKEN environment variable.")
     else:
         bot.run(token)
+
 
